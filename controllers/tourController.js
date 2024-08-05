@@ -20,12 +20,21 @@ exports.createTour = async (req, res) => {
 
 exports.getAllTours = async (req, res) => {
   try {
+    // Filtering
     const queryObject = { ...req.query };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
 
     excludedFields.forEach((el) => delete queryObject[el]);
+    // Advanced filtering
+    const queryString = JSON.stringify(queryObject).replace(
+      // replaces gte, gt, lte, lt with $gte, $gt, $lte, $lt respectfuly
+      /\b(gte|gt|lte|lt)\b/g,
+      (match) => `$${match}`,
+    );
 
-    const tours = await Tour.find(queryObject);
+    const query = Tour.find(JSON.parse(queryString));
+
+    const tours = await query;
     res.status(200).json({
       status: 'success',
       results: tours.length,
