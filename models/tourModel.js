@@ -8,6 +8,8 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a name'],
       unique: true,
       trim: true,
+      maxLength: [60, 'Tour name is too long - max length is 60 characters'],
+      minLength: [5, 'Tour name is too short - min length is 5 characters'],
     },
     slug: String,
     duration: {
@@ -21,10 +23,16 @@ const tourSchema = new mongoose.Schema(
     difficulty: {
       type: String,
       required: [true, 'A Tour must have a difficulty'],
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficulty can only be easy, medium or difficult',
+      },
     },
     ratingsAverage: {
       type: Number,
       default: 4.5,
+      min: [1, 'Rating must be above 1.0'],
+      max: [1, 'Rating must be below 5.0'],
     },
     ratingsQuantity: {
       type: Number,
@@ -36,6 +44,12 @@ const tourSchema = new mongoose.Schema(
     },
     priceDiscount: {
       type: Number,
+      validate: {
+        validator: function (discount) {
+          return discount <= this.price;
+        },
+        message: 'Discount price should be lower ther the tour price',
+      },
     },
     summary: {
       type: String,
@@ -66,6 +80,8 @@ const tourSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   },
 );
+
+// Model middleware
 
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
